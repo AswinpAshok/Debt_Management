@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="@drawable/dialog_header"
+            android:id="@+id/dialogHeader">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:textColor="@color/white"
+                android:text="Permission Request"
+                android:fontFamily="@font/comforta"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="10dp"
+                android:id="@+id/dialog_title"/>
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:srcCompat="@drawable/ic_folder"
+                android:layout_centerHorizontal="true"
+                android:layout_above="@id/dialog_title"
+                android:layout_marginBottom="10dp"
+                />
+
+        </RelativeLayout>
+        
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/dialogHeader"
+            android:background="@drawable/dialog_body"
+            android:padding="20dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/dialog_message"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:fontFamily="@font/comforta"
+                android:text="To import excel files, Application need external storage permission. Please grant permission"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:fontFamily="@font/comforta"
+                android:text="Grant"
+                android:textColor="@color/white"
+                android:background="#2da1fc"
+                android:layout_below="@id/dialog_message"
+                android:layout_marginTop="20dp"
+                android:layout_alignParentRight="true"
+                android:id="@+id/grantButton"/>
+            
+        </RelativeLayout>
+
+
+</RelativeLayout>
