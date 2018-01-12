@@ -2,13 +2,17 @@ package com.example.aswin.myapplication.helper_classes;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.example.aswin.myapplication.listener_interface.DatabaseChangeListener;
+import com.example.aswin.myapplication.model_classes.DashboardInfo;
 import com.example.aswin.myapplication.model_classes.MoneyDonor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,17 +21,25 @@ import java.util.List;
 
 public class DBHelper extends SQLiteOpenHelper {
 
+    private static final String BROADCAST_ID="1457";
+
     private static final String DB_NAME="money.db";
     private static final int DB_VERSION=1;
     private static DBHelper mInstance;
     private static final String TABLE_RECORDS="records_table";
     private static final String COLUMN_NAME="name";
     private static final String COLUMN_AMOUNT="amount";
+    private static final String COLUMN_CREATED_DATE="created_date";
     private static final String id="_id";
+    private DatabaseChangeListener listener;
 
 
     public DBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
+    }
+
+    public void setListener(DatabaseChangeListener listener) {
+        this.listener = listener;
     }
 
     public static synchronized DBHelper getInstance(Context context){
@@ -42,7 +54,8 @@ public class DBHelper extends SQLiteOpenHelper {
         String CREATE_RECORDS_TABLE="CREATE TABLE "+TABLE_RECORDS+" ( "+
                 id+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
                 COLUMN_NAME+" TEXT,"+
-                COLUMN_AMOUNT+" TEXT)";
+                COLUMN_AMOUNT+" TEXT,"+
+                COLUMN_CREATED_DATE+" TEXT)";
         db.execSQL(CREATE_RECORDS_TABLE);
 
     }
@@ -59,12 +72,23 @@ public class DBHelper extends SQLiteOpenHelper {
         for (int i=0;i<donorList.size();i++){
 
             MoneyDonor donor=donorList.get(i);
-            ContentValues values=new ContentValues();
-            values.put(COLUMN_NAME,donor.getName());
-            values.put(COLUMN_AMOUNT,donor.getAmount());
-            db.insert(TABLE_RECORDS,null,values);
+
+            String CHECK_RECORD="SELECT "+id+" FROM "+TABLE_RECORDS
+                    +" WHERE "+COLUMN_NAME+"='"+donor.getName()
+                    +"' AND "+COLUMN_AMOUNT+"='"+donor.getAmount()+"'";
+            Cursor c=db.rawQuery(CHECK_RECORD,null);
+
+            if(c.getCount()==0){
+
+                ContentValues values=new ContentValues();
+                values.put(COLUMN_NAME,donor.getName());
+                values.put(COLUMN_AMOUNT,donor.getAmount());
+                values.put(COLUMN_CREATED_DATE, System.currentTimeMillis());
+                db.insert(TABLE_RECORDS,null,values);
+            }
         }
 
+        listener.onDatabaseChanged();
         db.close();
         getAll();
     }
@@ -90,4 +114,101 @@ public class DBHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
     }
+
+    public List<MoneyDonor> searchDonors(String searchQuery){
+        List<MoneyDonor> donorList=new ArrayList<>();
+        SQLiteDatabase db=getReadableDatabase();
+        String SEARCH="SELECT * FROM "+TABLE_RECORDS+" WHERE "+COLUMN_NAME+" LIKE '%"+searchQuery+"%'";
+        Cursor cursor=db.rawQuery(SEARCH,null );
+
+        if(cursor.getCount()>0){
+            cursor.moveToFirst();
+            do{
+                MoneyDonor donor=new MoneyDonor();
+                donor.setId(cursor.getInt(0));
+                Log.d("####", "searchDonors: "+donor.getId());
+                donor.setName(cursor.getString(1));
+                donor.setAmount(cursor.getString(2));
+                donorList.add(donor);
+                cursor.moveToNext();
+            }while (!cursor.isAfterLast());
+        }else {
+            cursor.close();
+            db.close();
+            return null;
+        }
+
+        cursor.close();
+        db.close();
+        return donorList;
+    }
+
+    public MoneyDonor getDonorDetails(int ID){
+        SQLiteDatabase db=getReadableDatabase();
+        String GET_DETAILS="SELECT * FROM "+TABLE_RECORDS+" WHERE "+id+"="+ID;
+
+        Cursor cursor=db.rawQuery(GET_DETAILS,null);
+        if(cursor.getCount()==1){
+            cursor.moveToFirst();
+            MoneyDonor donor=new MoneyDonor();
+            donor.setId(ID);
+            donor.setName(cursor.getString(1));
+            donor.setAmount(cursor.getString(2));
+            donor.setCreatedDate(cursor.getString(3));
+
+            cursor.close();
+            db.close();
+            return donor;
+        }
+
+        cursor.close();
+        db.close();
+        return null;
+    }
+
+    public void addDonor(String name,String amount){
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues  values=new ContentValues();
+        values.put(COLUMN_NAME,name);
+        values.put(COLUMN_AMOUNT,amount);
+        values.put(COLUMN_CREATED_DATE,System.currentTimeMillis());
+        db.insert(TABLE_RECORDS,null,values);
+        db.close();
+        listener.onDatabaseChanged();
+    }
+
+    public DashboardInfo getDashboardInfo(){
+        DashboardInfo info=new DashboardInfo();
+        SQLiteDatabase database=getReadableDatabase();
+
+        String GET_RECORD_COUNT="SELECT "+id+" FROM "+TABLE_RECORDS;
+        Cursor cursor=database.rawQuery(GET_RECORD_COUNT,null);
+        int count=cursor.getCount();
+        info.setTotalRecords("Total Records : "+String.valueOf(count));
+
+        String GET_TOTAL_AMOUNT="SELECT "+COLUMN_AMOUNT+" FROM "+TABLE_RECORDS;
+        Cursor cursor1=database.rawQuery(GET_TOTAL_AMOUNT,null);
+        float totalAmount=0;
+        if(cursor1.getCount()>0){
+            cursor1.moveToFirst();
+            do{
+
+                String amount=cursor1.getString(0);
+                Log.d("####", "getDashboardInfo: "+amount);
+                totalAmount=totalAmount+Float.parseFloat(amount);
+                cursor1.moveToNext();
+            }while (!cursor1.isAfterLast());
+            info.setTotalAmount("Total amount : "+String.valueOf(totalAmount));
+        }else {
+            info.setTotalAmount("Total amount : 0");
+        }
+
+        cursor1.close();
+        cursor.close();
+        database.close();
+
+        return info;
+
+    }
+
 }

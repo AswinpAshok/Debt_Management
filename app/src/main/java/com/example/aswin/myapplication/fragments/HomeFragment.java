@@ -4,20 +4,20 @@ package com.example.aswin.myapplication.fragments;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.DialogInterface;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -27,21 +27,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.example.aswin.myapplication.R;
 import com.example.aswin.myapplication.helper_classes.DBHelper;
 import com.example.aswin.myapplication.helper_classes.ExcelHandler;
+import com.example.aswin.myapplication.listener_interface.DatabaseChangeListener;
+import com.example.aswin.myapplication.model_classes.DashboardInfo;
 import com.example.aswin.myapplication.model_classes.MoneyDonor;
-
 import java.io.IOException;
 import java.util.List;
-
-import jxl.read.biff.BiffException;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements DatabaseChangeListener{
 
     private static final int READ_REQUEST_CODE=1284;
     private static final int MY_PERMISSIONS_REQUEST_READ_STORAGE=1845;
@@ -49,6 +51,8 @@ public class HomeFragment extends Fragment {
     private CoordinatorLayout baseLayout;
     private ExcelHandler excelHandler;
     private DBHelper dbHelper;
+    private FloatingActionButton addButton;
+    private TextView totalRecords,totalAmount;
 
     public HomeFragment() {
 
@@ -62,18 +66,91 @@ public class HomeFragment extends Fragment {
         View v= inflater.inflate(R.layout.fragment_home, container, false);
 
         baseLayout=v.findViewById(R.id.baseLayout);
+        addButton=v.findViewById(R.id.addButton);
+        totalAmount=v.findViewById(R.id.totalAmount);
+        totalRecords=v.findViewById(R.id.totalRecords);
+
+        baseLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                baseLayout.requestLayout();
+            }
+        });
 
         setHasOptionsMenu(true);
         excelHandler=new ExcelHandler();
         dbHelper=DBHelper.getInstance(getActivity());
+        dbHelper.setListener(this);
+
+        populateDashBoard();
+
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createNewFundDialog();
+            }
+        });
 
         return v;
+    }
+
+    private void populateDashBoard() {
+
+        DashboardInfo info=dbHelper.getDashboardInfo();
+        totalAmount.setText(info.getTotalAmount());
+        totalRecords.setText(info.getTotalRecords());
+    }
+
+    private void createNewFundDialog() {
+        final Dialog dialog=new Dialog(getActivity());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.add_fund_dialog);
+        View view=dialog.getWindow().getDecorView();
+        view.setBackgroundResource(android.R.color.transparent);
+        dialog.show();
+        dialog.setCancelable(false);
+        ImageButton closeButton=dialog.findViewById(R.id.close_button);
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        final EditText donorName=dialog.findViewById(R.id.donorName);
+        final EditText donorAmount=dialog.findViewById(R.id.donorAmount);
+        Button addFundButton=dialog.findViewById(R.id.addFundButton);
+        addFundButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String name=donorName.getText().toString().trim();
+                String amount=donorAmount.getText().toString().trim();
+                boolean isValid=true;
+                if(name.equals("")){
+                    donorName.setError("Required");
+                    isValid=false;
+                }
+
+                if(amount.equals("")){
+                    donorAmount.setError("Required");
+                    isValid=false;
+                }
+
+                if(isValid){
+                    dbHelper.addDonor(name,amount);
+                    dialog.dismiss();
+                    Snackbar.make(baseLayout,"Saved",Snackbar.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
 
     @Override
     public void onCreateOptionsMenu(Menu menu,MenuInflater inflater) {
         inflater.inflate(R.menu.main_menu,menu);
+
+
 //        super.onCreateOptionsMenu();
 //        return true;
     }
@@ -125,6 +202,7 @@ public class HomeFragment extends Fragment {
 
     public void show_permission_Req_dialog(){
         final Dialog dialog=new Dialog(getActivity());
+        dialog.setCancelable(false);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.storage_permission_dialog_layout);
         View v = dialog.getWindow().getDecorView();
@@ -136,11 +214,17 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
-//                Log.d(TAG, "onClick: "+shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE));
                 requestPermissions(
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_READ_STORAGE);
-//                Log.d(TAG, "onClick: req permission");
+            }
+        });
+        ImageButton closeButton=dialog.findViewById(R.id.close_button);
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: close dialog");
+                dialog.dismiss();
             }
         });
     }
@@ -164,17 +248,18 @@ public class HomeFragment extends Fragment {
             Uri uri = null;
             if (data != null) {
                 uri = data.getData();
-                Log.i(TAG, "Uri: " + uri.toString());
-                try {
-                    List<MoneyDonor>donorList=excelHandler.ReadStream(getActivity().getContentResolver().openInputStream(uri));
-                    dbHelper.insertDonorList(donorList);
+                if(uri.getPath().endsWith("xls")) {
+                    try {
 
-                } catch (IOException e) {
+                        List<MoneyDonor> donorList = excelHandler.ReadStream(getActivity().getContentResolver().openInputStream(uri));
+                        dbHelper.insertDonorList(donorList);
 
-                    Snackbar.make(baseLayout,"Unable to access file",Snackbar.LENGTH_LONG).show();
-                } catch (BiffException e) {
+                    } catch (IOException e) {
 
-                    Snackbar.make(baseLayout,"Unsupported file",Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(baseLayout, "Unable to access file", Snackbar.LENGTH_LONG).show();
+                    }
+                }else {
+                    Snackbar.make(baseLayout, "Unsupported file", Snackbar.LENGTH_LONG).show();
                 }
 
             }else {
@@ -182,5 +267,16 @@ public class HomeFragment extends Fragment {
 
             }
         }
+    }
+
+    @Override
+    public void onDatabaseChanged() {
+        populateDashBoard();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        populateDashBoard();
     }
 }

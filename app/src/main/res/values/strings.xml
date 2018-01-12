@@ -1,6 +1,13 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">Money Manager</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="storage_permission_req">To import excel files, Application need external storage permission. You will not be able to import excel sheets if you don\'t grant permission</string>
+    <string name="grant">GRANT</string>
+    <string name="permission_req">Permission Request</string>
+    <string name="rupee">\u20B9</string>
+    <string name="addFund">Add new fund</string>
+    <string name="name">Name</string>
+    <string name="amount">Amount</string>
+    <string name="top10">Top ten</string>
 </resources>

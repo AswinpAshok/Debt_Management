@@ -9,18 +9,30 @@
             android:layout_width="match_parent"
             android:layout_height="150dp"
             android:background="@drawable/dialog_header"
-            android:id="@+id/dialogHeader">
+            android:id="@+id/dialogHeader"
+            android:padding="10dp">
+
+            <ImageButton
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:padding="5dp"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                app:srcCompat="@drawable/ic_close"
+                android:background="@null"
+                android:id="@+id/close_button"/>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:layout_alignParentBottom="true"
                 android:textColor="@color/white"
-                android:text="Permission Request"
+                android:text="@string/permission_req"
                 android:fontFamily="@font/comforta"
                 android:textStyle="bold"
                 android:textSize="18sp"
-                android:layout_marginBottom="10dp"
                 android:id="@+id/dialog_title"/>
 
             <ImageView
@@ -29,8 +41,7 @@
                 app:srcCompat="@drawable/ic_folder"
                 android:layout_centerHorizontal="true"
                 android:layout_above="@id/dialog_title"
-                android:layout_marginBottom="10dp"
-                />
+                android:layout_marginBottom="10dp"/>
 
         </RelativeLayout>
         
@@ -48,17 +59,17 @@
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 android:fontFamily="@font/comforta"
-                android:text="To import excel files, Application need external storage permission. Please grant permission"/>
+                android:text="@string/storage_permission_req"/>
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="30dp"
                 android:fontFamily="@font/comforta"
-                android:text="Grant"
+                android:text="@string/grant"
                 android:textColor="@color/white"
-                android:background="#2da1fc"
+                android:background="@drawable/blue_button"
                 android:layout_below="@id/dialog_message"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="15dp"
                 android:layout_alignParentRight="true"
                 android:id="@+id/grantButton"/>
             

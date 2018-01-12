@@ -6,7 +6,8 @@ package com.example.aswin.myapplication.model_classes;
 
 public class MoneyDonor {
 
-    private String name,amount;
+    private String name,amount,createdDate;
+    private int id;
 
     public MoneyDonor() {
     }
@@ -25,6 +26,22 @@ public class MoneyDonor {
 
     public void setAmount(String amount) {
         this.amount = amount;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(String createdDate) {
+        this.createdDate = createdDate;
     }
 
     @Override
