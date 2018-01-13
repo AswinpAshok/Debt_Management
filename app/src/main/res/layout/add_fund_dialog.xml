@@ -71,10 +71,12 @@
             android:textColor="@color/black"
             android:id="@+id/donorName"
             android:paddingLeft="10dp"
+            android:paddingStart="10dp"
             android:maxLines="1"
             android:textSize="16sp"
-            android:inputType="text"
-            android:focusable="true"/>
+            android:inputType="textCapWords"
+            android:focusable="true"
+            android:maxLength="50"/>
         </LinearLayout>
 
         <LinearLayout
@@ -94,15 +96,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginLeft="15dp"
+                android:layout_marginStart="15dp"
                 android:hint="@string/amount"
                 android:fontFamily="@font/comforta"
                 android:textColor="@color/black"
                 android:id="@+id/donorAmount"
                 android:paddingLeft="10dp"
+                android:paddingStart="10dp"
                 android:maxLines="1"
                 android:textSize="16sp"
                 android:inputType="number"
-                android:focusable="true"/>
+                android:focusable="true"
+                android:maxLength="8"/>
         </LinearLayout>
 
 
@@ -111,12 +116,13 @@
             android:layout_width="wrap_content"
             android:layout_height="30dp"
             android:fontFamily="@font/comforta"
-            android:text="ADD"
+            android:text="@string/add"
             android:textColor="@color/white"
             android:background="@drawable/blue_button"
             android:layout_below="@id/amountRow"
             android:layout_marginTop="15dp"
             android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:id="@+id/addFundButton"/>
 
 

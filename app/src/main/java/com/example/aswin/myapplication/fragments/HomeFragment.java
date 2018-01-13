@@ -4,9 +4,12 @@ package com.example.aswin.myapplication.fragments;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,7 +20,13 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSnapHelper;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SnapHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,20 +39,23 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.ViewSwitcher;
 
 import com.example.aswin.myapplication.R;
 import com.example.aswin.myapplication.helper_classes.DBHelper;
 import com.example.aswin.myapplication.helper_classes.ExcelHandler;
-import com.example.aswin.myapplication.listener_interface.DatabaseChangeListener;
+import com.example.aswin.myapplication.listener_interface.FileImportListener;
 import com.example.aswin.myapplication.model_classes.DashboardInfo;
 import com.example.aswin.myapplication.model_classes.MoneyDonor;
+import com.example.aswin.myapplication.recyclerview_components.TopTenRecyclerAdapter;
+
 import java.io.IOException;
 import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HomeFragment extends Fragment implements DatabaseChangeListener{
+public class HomeFragment extends Fragment implements FileImportListener{
 
     private static final int READ_REQUEST_CODE=1284;
     private static final int MY_PERMISSIONS_REQUEST_READ_STORAGE=1845;
@@ -53,6 +65,11 @@ public class HomeFragment extends Fragment implements DatabaseChangeListener{
     private DBHelper dbHelper;
     private FloatingActionButton addButton;
     private TextView totalRecords,totalAmount;
+    private CardView fileImport;
+    private TopTenRecyclerAdapter adapter;
+    private RecyclerView topTenRecycler;
+    private ViewSwitcher switcher;
+    private ProgressDialog progressDialog;
 
     public HomeFragment() {
 
@@ -69,6 +86,14 @@ public class HomeFragment extends Fragment implements DatabaseChangeListener{
         addButton=v.findViewById(R.id.addButton);
         totalAmount=v.findViewById(R.id.totalAmount);
         totalRecords=v.findViewById(R.id.totalRecords);
+        fileImport=v.findViewById(R.id.fileImport);
+        topTenRecycler=v.findViewById(R.id.topTenRecycler);
+        switcher=v.findViewById(R.id.switcher);
+
+        getActivity().registerReceiver(receiver, new IntentFilter("1457"));
+
+        SnapHelper snapHelper=new LinearSnapHelper();
+        snapHelper.attachToRecyclerView(topTenRecycler);
 
         baseLayout.post(new Runnable() {
             @Override
@@ -77,12 +102,14 @@ public class HomeFragment extends Fragment implements DatabaseChangeListener{
             }
         });
 
-        setHasOptionsMenu(true);
         excelHandler=new ExcelHandler();
-        dbHelper=DBHelper.getInstance(getActivity());
-        dbHelper.setListener(this);
+        excelHandler.setFileImportListener(this);
 
-        populateDashBoard();
+        dbHelper=DBHelper.getInstance(getActivity());
+        dbHelper.setContext(getActivity());
+//        dbHelper.setListener(this);
+
+        prepareHomeScreen();
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,14 +118,37 @@ public class HomeFragment extends Fragment implements DatabaseChangeListener{
             }
         });
 
+        fileImport.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkPermission();
+            }
+        });
+
         return v;
     }
 
-    private void populateDashBoard() {
+    private void prepareHomeScreen() {
 
         DashboardInfo info=dbHelper.getDashboardInfo();
         totalAmount.setText(info.getTotalAmount());
         totalRecords.setText(info.getTotalRecords());
+
+        List<MoneyDonor> donorList=dbHelper.getTopTen();
+        if(donorList!=null) {
+            switcher.setDisplayedChild(0);
+            adapter = new TopTenRecyclerAdapter(donorList);
+            RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity().getApplicationContext(), LinearLayoutManager.HORIZONTAL, false);
+            topTenRecycler.setLayoutManager(layoutManager);
+            RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
+            topTenRecycler.setItemAnimator(itemAnimator);
+            topTenRecycler.setAdapter(adapter);
+
+        }else {
+            switcher.setDisplayedChild(1);
+        }
+
+
     }
 
     private void createNewFundDialog() {
@@ -137,31 +187,16 @@ public class HomeFragment extends Fragment implements DatabaseChangeListener{
                 }
 
                 if(isValid){
-                    dbHelper.addDonor(name,amount);
+                    int flag=dbHelper.addDonor(name,amount);
                     dialog.dismiss();
-                    Snackbar.make(baseLayout,"Saved",Snackbar.LENGTH_SHORT).show();
+                    if(flag==0){
+                        Snackbar.make(baseLayout, "Same record already exists", Snackbar.LENGTH_SHORT).show();
+                    }else {
+                        Snackbar.make(baseLayout, "Saved", Snackbar.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
-    }
-
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu,MenuInflater inflater) {
-        inflater.inflate(R.menu.main_menu,menu);
-
-
-//        super.onCreateOptionsMenu();
-//        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id=item.getItemId();
-        switch (id){
-            case R.id.action_open : checkPermission();
-        }
-        return true;
     }
 
     @Override
@@ -238,45 +273,111 @@ public class HomeFragment extends Fragment implements DatabaseChangeListener{
 
         intent.setType("*/*");
 
-        startActivityForResult(intent, READ_REQUEST_CODE);
+        getActivity().startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-
-            Uri uri = null;
-            if (data != null) {
-                uri = data.getData();
-                if(uri.getPath().endsWith("xls")) {
-                    try {
-
-                        List<MoneyDonor> donorList = excelHandler.ReadStream(getActivity().getContentResolver().openInputStream(uri));
-                        dbHelper.insertDonorList(donorList);
-
-                    } catch (IOException e) {
-
-                        Snackbar.make(baseLayout, "Unable to access file", Snackbar.LENGTH_LONG).show();
-                    }
-                }else {
-                    Snackbar.make(baseLayout, "Unsupported file", Snackbar.LENGTH_LONG).show();
-                }
-
-            }else {
-                Snackbar.make(baseLayout,"Unable to access file",Snackbar.LENGTH_LONG).show();
-
-            }
-        }
-    }
-
-    @Override
-    public void onDatabaseChanged() {
-        populateDashBoard();
-    }
 
     @Override
     public void onResume() {
+        if(receiver==null) {
+            getActivity().registerReceiver(receiver, new IntentFilter("1457"));
+        }
+        prepareHomeScreen();
         super.onResume();
-        populateDashBoard();
+
+    }
+
+    public void onItemDeleted() {
+        Snackbar.make(baseLayout,"Deleted",Snackbar.LENGTH_LONG).show();
+    }
+
+    public void onDonorListInserted(Intent data) {
+        final Uri uri;
+        if (data != null) {
+            uri = data.getData();
+            if(uri.getPath().endsWith("xls")) {
+
+                try {
+                    excelHandler.ReadStream(getActivity().getContentResolver().openInputStream(uri));
+                    progressDialog=new ProgressDialog(getActivity());
+                    progressDialog.setIndeterminate(true);
+                    progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    progressDialog.setTitle("Please wait..");
+                    progressDialog.setMessage("Importing file");
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
+                } catch (IOException e) {
+                    Snackbar.make(baseLayout, "Unable to access file", Snackbar.LENGTH_LONG).show();
+                }
+
+            }else {
+                Snackbar.make(baseLayout, "Unsupported file", Snackbar.LENGTH_LONG).show();
+            }
+
+        }else {
+            Snackbar.make(baseLayout,"Unable to access file",Snackbar.LENGTH_LONG).show();
+
+        }
+    }
+
+
+    @Override
+    public void OnImportFinished(List<MoneyDonor> donors) {
+        Log.d(TAG, "onImportFinished: ");
+        progressDialog.dismiss();
+        if(receiver==null){
+            getActivity().registerReceiver(receiver,new IntentFilter("1457"));
+        }
+        dbHelper.insertDonorList(donors);
+        Snackbar.make(baseLayout, "Successfully imported file", Snackbar.LENGTH_LONG).show();
+
+    }
+
+    @Override
+    public void OnIOException() {
+        progressDialog.dismiss();
+        Snackbar.make(baseLayout,"Unable to access file",Snackbar.LENGTH_LONG).show();
+
+    }
+
+    @Override
+    public void OnNullPointerException() {
+        progressDialog.dismiss();
+        Snackbar.make(baseLayout,"File import failed. File contents are not properly formatted",Snackbar.LENGTH_LONG).show();
+
+    }
+
+    @Override
+    public void OnIllegalStateException() {
+        Snackbar.make(baseLayout,"File import failed. File contents are not properly formatted",Snackbar.LENGTH_LONG).show();
+        progressDialog.dismiss();
+    }
+
+    private BroadcastReceiver receiver=new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive: received");
+            prepareHomeScreen();
+        }
+    };
+
+
+    @Override
+    public void onPause() {
+//        if(receiver!=null) {
+//            getActivity().unregisterReceiver(receiver);
+//        }
+//        receiver=null;
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+
+        if(receiver!=null) {
+            getActivity().unregisterReceiver(receiver);
+        }
+        receiver=null;
+        super.onDestroy();
     }
 }

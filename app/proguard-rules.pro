@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep public class org.apache.poi.** {*;}
+-keep class android.support.v7.widget.SearchView { *; }
+-dontwarn com.microsoft.**
+-dontwarn org.apache.poi.**
+-dontwarn org.w3.w2000.**
+-dontwarn org.w3.x2000.**
+-dontwarn org.openxmlformats.schemas.**
+-dontwarn org.etsi.uri.**
+-dontwarn schemaorg_apache_xmlbeans.**

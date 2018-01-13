@@ -7,8 +7,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-
-import com.example.aswin.myapplication.listener_interface.DatabaseChangeListener;
 import com.example.aswin.myapplication.model_classes.DashboardInfo;
 import com.example.aswin.myapplication.model_classes.MoneyDonor;
 
@@ -31,16 +29,16 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String COLUMN_AMOUNT="amount";
     private static final String COLUMN_CREATED_DATE="created_date";
     private static final String id="_id";
-    private DatabaseChangeListener listener;
+    private Context context;
 
+    public void setContext(Context context) {
+        this.context = context;
+    }
 
     public DBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
 
-    public void setListener(DatabaseChangeListener listener) {
-        this.listener = listener;
-    }
 
     public static synchronized DBHelper getInstance(Context context){
         if(mInstance==null){
@@ -54,7 +52,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String CREATE_RECORDS_TABLE="CREATE TABLE "+TABLE_RECORDS+" ( "+
                 id+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
                 COLUMN_NAME+" TEXT,"+
-                COLUMN_AMOUNT+" TEXT,"+
+                COLUMN_AMOUNT+" INTEGER,"+
                 COLUMN_CREATED_DATE+" TEXT)";
         db.execSQL(CREATE_RECORDS_TABLE);
 
@@ -88,9 +86,12 @@ public class DBHelper extends SQLiteOpenHelper {
             }
         }
 
-        listener.onDatabaseChanged();
+//        listener.onDatabaseChanged();
+        Intent intent=new Intent(BROADCAST_ID);
+//        intent.setAction("ACTION_DB_CHANGED");
+        context.sendBroadcast(intent);
         db.close();
-        getAll();
+//        getAll();
     }
 
 
@@ -104,7 +105,7 @@ public class DBHelper extends SQLiteOpenHelper {
             do{
                 MoneyDonor donor=new MoneyDonor();
                 donor.setName(cursor.getString(0));
-                donor.setAmount(cursor.getString(1));
+                donor.setAmount(cursor.getInt(1));
                 Log.d("####", "getAll: "+donor);
                 cursor.moveToNext();
 
@@ -128,7 +129,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 donor.setId(cursor.getInt(0));
                 Log.d("####", "searchDonors: "+donor.getId());
                 donor.setName(cursor.getString(1));
-                donor.setAmount(cursor.getString(2));
+                donor.setAmount(cursor.getInt(2));
                 donorList.add(donor);
                 cursor.moveToNext();
             }while (!cursor.isAfterLast());
@@ -153,7 +154,7 @@ public class DBHelper extends SQLiteOpenHelper {
             MoneyDonor donor=new MoneyDonor();
             donor.setId(ID);
             donor.setName(cursor.getString(1));
-            donor.setAmount(cursor.getString(2));
+            donor.setAmount(cursor.getInt(2));
             donor.setCreatedDate(cursor.getString(3));
 
             cursor.close();
@@ -166,15 +167,39 @@ public class DBHelper extends SQLiteOpenHelper {
         return null;
     }
 
-    public void addDonor(String name,String amount){
+    public int addDonor(String name,String amount){
         SQLiteDatabase db=getWritableDatabase();
-        ContentValues  values=new ContentValues();
-        values.put(COLUMN_NAME,name);
-        values.put(COLUMN_AMOUNT,amount);
-        values.put(COLUMN_CREATED_DATE,System.currentTimeMillis());
-        db.insert(TABLE_RECORDS,null,values);
-        db.close();
-        listener.onDatabaseChanged();
+
+        SQLiteDatabase db1=getReadableDatabase();
+
+        String CHECK_CLASH_QUERY="SELECT "+id+" FROM "+TABLE_RECORDS+
+                " WHERE "+COLUMN_NAME+"='"+name+"' AND "
+                +COLUMN_AMOUNT+"="+amount;
+
+        Cursor cursor=db1.rawQuery(CHECK_CLASH_QUERY,null);
+
+        if(cursor.getCount()>0){
+            cursor.close();
+            db.close();
+            db1.close();
+            return 0;
+        }else {
+
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_NAME, name);
+            values.put(COLUMN_AMOUNT, amount);
+            values.put(COLUMN_CREATED_DATE, System.currentTimeMillis());
+            db.insert(TABLE_RECORDS, null, values);
+            db.close();
+            cursor.close();
+            db1.close();
+            Intent intent=new Intent(BROADCAST_ID);
+//            intent.setAction("ACTION_DB_CHANGED");
+            context.sendBroadcast(intent);
+//            listener.onDatabaseChanged();
+
+            return 1;
+        }
     }
 
     public DashboardInfo getDashboardInfo(){
@@ -194,7 +219,6 @@ public class DBHelper extends SQLiteOpenHelper {
             do{
 
                 String amount=cursor1.getString(0);
-                Log.d("####", "getDashboardInfo: "+amount);
                 totalAmount=totalAmount+Float.parseFloat(amount);
                 cursor1.moveToNext();
             }while (!cursor1.isAfterLast());
@@ -209,6 +233,69 @@ public class DBHelper extends SQLiteOpenHelper {
 
         return info;
 
+    }
+
+    public List<MoneyDonor> getTopTen(){
+        SQLiteDatabase db=getReadableDatabase();
+        List<MoneyDonor> donorList=new ArrayList<>();
+
+        String QUERY="SELECT * FROM "+TABLE_RECORDS+" ORDER BY "+COLUMN_AMOUNT+" DESC LIMIT 10";
+        Cursor cursor=db.rawQuery(QUERY,null);
+
+        if(cursor.getCount()<1){
+            cursor.close();
+            db.close();
+            return null;
+        }else {
+            cursor.moveToFirst();
+            do {
+                MoneyDonor donor=new MoneyDonor();
+                donor.setId(cursor.getInt(0));
+                donor.setName(cursor.getString(1));
+                donor.setAmount(cursor.getInt(2));
+                donorList.add(donor);
+                cursor.moveToNext();
+            }while (!cursor.isAfterLast());
+        }
+
+        cursor.close();
+        db.close();
+        return donorList;
+    }
+
+    public int updateDonor(MoneyDonor donor){
+        SQLiteDatabase db=getReadableDatabase();
+
+        String CHECK_CLASH_QUERY="SELECT "+id+" FROM "+TABLE_RECORDS+
+                " WHERE "+COLUMN_NAME+"='"+donor.getName()+"' AND "
+                +COLUMN_AMOUNT+"="+donor.getAmount();
+
+        Cursor cursor=db.rawQuery(CHECK_CLASH_QUERY,null);
+
+        if(cursor.getCount()>0){
+            cursor.close();
+            db.close();
+            return 0;
+        }else {
+            SQLiteDatabase db1=getWritableDatabase();
+            String UPDATE_RECORD="UPDATE "+TABLE_RECORDS+
+                    " SET "+COLUMN_NAME+"='"+donor.getName()+"', "+
+                    COLUMN_AMOUNT+"="+donor.getAmount()+
+                    " WHERE "+id+"="+donor.getId();
+            db.execSQL(UPDATE_RECORD);
+            db1.close();
+        }
+
+        cursor.close();
+        db.close();
+        return 1;
+    }
+
+    public void deleteRecord(int donorID){
+        SQLiteDatabase db=getWritableDatabase();
+        String DELETE_ITEM="DELETE FROM "+TABLE_RECORDS+" WHERE "+id+"="+donorID;
+        db.execSQL(DELETE_ITEM);
+        db.close();
     }
 
 }

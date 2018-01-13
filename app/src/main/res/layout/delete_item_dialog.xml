@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="@drawable/delete_dialog_header"
+            android:id="@+id/dialogHeader"
+            android:padding="10dp">
+
+            <ImageButton
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:padding="5dp"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                app:srcCompat="@drawable/ic_close"
+                android:background="@null"
+                android:id="@+id/close_button"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:textColor="@color/white"
+                android:text="@string/delete_dialog_title"
+                android:fontFamily="@font/comforta"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:id="@+id/dialog_title"/>
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:srcCompat="@drawable/ic_delete"
+                android:layout_centerHorizontal="true"
+                android:layout_above="@id/dialog_title"
+                android:layout_marginBottom="10dp"/>
+
+        </RelativeLayout>
+        
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/dialogHeader"
+            android:background="@drawable/dialog_body"
+            android:padding="20dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/dialog_message"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:fontFamily="@font/comforta"
+                android:text="@string/delete_confirmation"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:fontFamily="@font/comforta"
+                android:text="@string/delete"
+                android:textColor="@color/white"
+                android:background="@drawable/red_button"
+                android:layout_below="@id/dialog_message"
+                android:layout_marginTop="15dp"
+                android:layout_alignParentRight="true"
+                android:id="@+id/deleteButton"/>
+            
+        </RelativeLayout>
+
+
+</RelativeLayout>

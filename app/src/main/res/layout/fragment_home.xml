@@ -4,95 +4,176 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.example.aswin.myapplication.fragments.HomeFragment"
-    android:id="@+id/baseLayout">
+    android:id="@+id/baseLayout"
+    android:background="#f2f2f2">
 
-    <RelativeLayout
+
+    <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingBottom="10dp">
 
-        <android.support.v7.widget.CardView
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardUseCompatPadding="true"
-            app:cardElevation="5dp"
-            app:cardCornerRadius="5dp"
-            android:layout_margin="10dp"
-            android:id="@+id/dashBoard"   >
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="120dp"
-                    android:id="@+id/image">
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/rupee"
-                        android:scaleType="centerCrop" />
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="#30000000"/>
-                </FrameLayout>
+            android:layout_height="match_parent">
 
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardUseCompatPadding="true"
+                app:cardElevation="5dp"
+                app:cardCornerRadius="5dp"
+                android:layout_margin="10dp"
+                android:id="@+id/dashBoard"   >
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/image"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:paddingBottom="10dp"
-                    android:paddingTop="10dp">
+                    android:layout_height="match_parent">
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="150dp"
+                        android:id="@+id/image">
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/rupee"
+                            android:scaleType="centerCrop" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="#30000000"/>
+                    </FrameLayout>
+
                     <RelativeLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_centerVertical="true">
-                        <TextView
+                        android:layout_below="@id/image"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:paddingBottom="10dp"
+                        android:paddingTop="10dp">
+                        <RelativeLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/comforta"
-                            android:textSize="14sp"
-                            android:textColor="@color/black"
-                            android:id="@+id/totalRecords"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/comforta"
-                            android:textSize="14sp"
-                            android:textColor="@color/black"
-                            android:id="@+id/totalAmount"
-                            android:layout_below="@id/totalRecords"
-                            android:layout_marginTop="4dp"/>
+                            android:layout_centerVertical="true">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/comforta"
+                                android:textSize="14sp"
+                                android:textColor="@color/black"
+                                android:id="@+id/totalRecords"/>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/comforta"
+                                android:textSize="14sp"
+                                android:textColor="@color/black"
+                                android:id="@+id/totalAmount"
+                                android:layout_below="@id/totalRecords"
+                                android:layout_marginTop="4dp"/>
+                        </RelativeLayout>
                     </RelativeLayout>
+
                 </RelativeLayout>
 
-            </RelativeLayout>
+            </android.support.v7.widget.CardView>
 
-        </android.support.v7.widget.CardView>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/comforta"
+                android:textColor="@color/black"
+                android:text="@string/top10"
+                android:layout_below="@id/dashBoard"
+                android:id="@+id/recyclerLabel"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginBottom="5dp"/>
+            <ViewSwitcher
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:id="@+id/switcher"
+                android:layout_below="@id/recyclerLabel">
+                <android.support.v7.widget.RecyclerView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/topTenRecycler"
+                    android:overScrollMode="never"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/comforta"
-            android:textColor="@color/black"
-            android:text="@string/top10"
-            android:layout_below="@id/dashBoard"
-            android:id="@+id/recyclerLabel"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginBottom="5dp"/>
-        <android.support.v7.widget.RecyclerView
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_below="@id/recyclerLabel"
-            android:id="@+id/topTenRecycler"/>
+                <android.support.v7.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:cardUseCompatPadding="true"
+                    android:elevation="3dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    app:cardCornerRadius="4dp">
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_centerHorizontal="true"
+                            android:orientation="vertical">
+                            <ImageView
+                                android:layout_width="45dp"
+                                android:layout_height="45dp"
+                                app:srcCompat="@drawable/ic_file"
+                                android:layout_gravity="center_horizontal"/>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_horizontal"
+                                android:layout_marginTop="8dp"
+                                android:fontFamily="@font/comforta"
+                                android:text="@string/no_records"/>
+                        </LinearLayout>
 
-    </RelativeLayout>
+                    </RelativeLayout>
 
+                </android.support.v7.widget.CardView>
+            </ViewSwitcher>
 
+            <android.support.v7.widget.CardView
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:contentPadding="10dp"
+                app:cardUseCompatPadding="true"
+                android:elevation="2dp"
+                app:cardCornerRadius="3dp"
+                android:layout_below="@id/switcher"
+                android:id="@+id/fileImport">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:layout_marginLeft="5dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/excel_logo"/>
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginLeft="15dp"
+                        android:fontFamily="@font/comforta"
+                        android:text="@string/importExcel"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </android.support.v7.widget.CardView>
+
+        </RelativeLayout>
+
+    </android.support.v4.widget.NestedScrollView>
 
 
     <android.support.design.widget.FloatingActionButton

@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.example.aswin.myapplication.DonorViewActivity"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:id="@+id/root">
     <include layout="@layout/toolbar"/>
     <RelativeLayout
         android:layout_width="match_parent"
@@ -46,7 +47,7 @@
                         android:layout_height="wrap_content"
                         android:layout_centerHorizontal="true"
                         android:textColor="@color/white"
-                        android:text="Details"
+                        android:text="@string/details"
                         android:fontFamily="@font/comforta"
                         android:textSize="16sp"
                         android:layout_alignParentBottom="true"

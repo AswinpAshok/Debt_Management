@@ -2,11 +2,11 @@ package com.example.aswin.myapplication.recyclerview_components;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.aswin.myapplication.DonorViewActivity;
@@ -16,32 +16,30 @@ import com.example.aswin.myapplication.model_classes.MoneyDonor;
 import java.util.List;
 
 /**
- * Created by ASWIN on 1/11/2018.
+ * Created by ASWIN on 1/13/2018.
  */
 
-public class SearchResultRecyclerAdapter extends RecyclerView.Adapter<SearchResultRecyclerAdapter.MyViewHolder> {
+public class TopTenRecyclerAdapter extends RecyclerView.Adapter<TopTenRecyclerAdapter.ViewHolder> {
 
-    private List<MoneyDonor> donorList;
+    private List<MoneyDonor>donorList;
 
-    public SearchResultRecyclerAdapter(List<MoneyDonor> donorList) {
+    public TopTenRecyclerAdapter(List<MoneyDonor> donorList) {
         this.donorList = donorList;
     }
 
     @Override
-    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
-        View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.search_result_recycler_row,parent,false);
-        return new MyViewHolder(view);
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.top_ten_recycler_row,parent,false);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(final MyViewHolder holder, int position) {
-
+    public void onBindViewHolder(final ViewHolder holder, int position) {
 
         final MoneyDonor donor=donorList.get(position);
-        holder.name.setText(donor.getName());
         holder.id.setText(String.valueOf(donor.getId()));
-
+        holder.name.setText(donor.getName());
+        holder.amount.setText(String.valueOf(donor.getAmount()));
         holder.root.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,31 +50,31 @@ public class SearchResultRecyclerAdapter extends RecyclerView.Adapter<SearchResu
         });
     }
 
-    public int removeItem(int id){
-        for (int i=0;i<donorList.size();i++){
-            MoneyDonor donor=donorList.get(i);
-            if(donor.getId()==id){
-                donorList.remove(i);
-                notifyItemRemoved(i);
-            }
-        }
-        return getItemCount();
-    }
-
     @Override
     public int getItemCount() {
         return donorList.size();
     }
 
-    protected class MyViewHolder extends RecyclerView.ViewHolder{
+    public void removeItem(int deleteID) {
+        for (int i=0;i<donorList.size();i++){
+            MoneyDonor donor=donorList.get(i);
+            if(donor.getId()==deleteID){
+                donorList.remove(i);
+                notifyItemRemoved(i);
+            }
+        }
+    }
 
-        protected TextView name,id;
-        private LinearLayout root;
+    protected class ViewHolder extends RecyclerView.ViewHolder{
 
-        public MyViewHolder(View itemView) {
+        private TextView amount,name,id;
+        private CardView root;
+
+        public ViewHolder(View itemView) {
             super(itemView);
-            name=itemView.findViewById(R.id.donorName);
             id=itemView.findViewById(R.id.donorID);
+            name=itemView.findViewById(R.id.name);
+            amount=itemView.findViewById(R.id.amount);
             root=itemView.findViewById(R.id.root);
         }
     }

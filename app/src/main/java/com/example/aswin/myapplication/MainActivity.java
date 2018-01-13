@@ -2,12 +2,14 @@ package com.example.aswin.myapplication;
 
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -19,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
 
     private FragmentManager manager;
     private Toolbar toolbar;
+    private HomeFragment fragment;
+    private static final int READ_REQUEST_CODE=1284;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,8 +32,9 @@ public class MainActivity extends AppCompatActivity {
         toolbar=findViewById(R.id.toolbar);
 
         manager=getSupportFragmentManager();
+        fragment=new HomeFragment();
         FragmentTransaction transaction=manager.beginTransaction();
-        transaction.replace(R.id.fragmentHolder,new HomeFragment());
+        transaction.replace(R.id.fragmentHolder,fragment);
         transaction.commit();
 
         setSupportActionBar(toolbar);
@@ -37,14 +42,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(final Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.search_menu, menu);
 
         // Associate searchable configuration with the SearchView
         SearchManager searchManager =
                 (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView =
+        final SearchView searchView =
                 (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
@@ -55,16 +60,37 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String query) {
-//                doSearch(query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextSubmit(String query) {
+
+                MenuItem searchMenuItem = menu.findItem(R.id.action_search);
+                if (searchMenuItem != null) {
+                    searchMenuItem.collapseActionView();
+                }
                 return false;
             }
         });
 
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        switch (requestCode){
+            case 12365:
+                if(resultCode==RESULT_OK) {
+                    fragment.onItemDeleted();
+                }
+                break;
+            case READ_REQUEST_CODE:
+                if(resultCode==RESULT_OK) {
+                    fragment.onDonorListInserted(data);
+                }
+                break;
+        }
     }
 }

@@ -6,8 +6,8 @@ package com.example.aswin.myapplication.model_classes;
 
 public class MoneyDonor {
 
-    private String name,amount,createdDate;
-    private int id;
+    private String name,createdDate;
+    private int id,amount;
 
     public MoneyDonor() {
     }
@@ -20,11 +20,11 @@ public class MoneyDonor {
         this.name = name;
     }
 
-    public String getAmount() {
+    public int getAmount() {
         return amount;
     }
 
-    public void setAmount(String amount) {
+    public void setAmount(int amount) {
         this.amount = amount;
     }
 

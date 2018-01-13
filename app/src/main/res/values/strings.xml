@@ -10,4 +10,12 @@
     <string name="name">Name</string>
     <string name="amount">Amount</string>
     <string name="top10">Top ten</string>
+    <string name="importExcel">Import excel file</string>
+    <string name="no_records">No records found</string>
+    <string name="details">Details</string>
+    <string name="no_results">Sorry... No results found</string>
+    <string name="add">ADD</string>
+    <string name="delete">Delete</string>
+    <string name="delete_confirmation">Are you sure you want to delete this record ? This action is final, and deleted records cannot be recovered later.</string>
+    <string name="delete_dialog_title">Delete ?</string>
 </resources>
